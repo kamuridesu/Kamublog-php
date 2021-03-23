@@ -4,6 +4,8 @@
   $field_err;
   $user_err;
 
+  $mensagem;
+
   session_start();
   if (!(isset($_SESSION['email']))){
     header("Location: login.php");
@@ -53,6 +55,7 @@
         if ($dbname === $uname && $dbemail === $uemail){
           global $user_err;
           $user_err = "Erro! Esse usuário já existe!";
+          $mensagem = "Este usuário já existe!";
           return -2;
         }
       }
@@ -151,38 +154,7 @@
   <link rel="stylesheet" type="text/css" href="./css/materialize.css">
 </head>
 <body>
-  <header>
-    <nav class="shiro-header">
-      <div class="nav-wrapper">
-        <a href="/Kamublog/admin/index.php" class="brand-logo center" style="color: black;">Painel de Administração - Registro</a>
-      </div>
-    </nav>
-    
-    <ul class="sidenav sidenav-fixed aoi-header" id=slide-out style="background-color: gray;">
-      <div class="child-sidenav">
-        <li> <a href="/Kamublog/admin/index.php" class="center" style="font-size: 50%; color: white;"><b><?php echo $_SESSION['username']; ?></b></a> </li>
-        <ul class="collapsible">
-          <li>
-            <div class="collapsible-header center" style="font-size: 40%; color: white;"><b>DASHBOARD</b></div>
-            <div class="collapsible-body child-collapsi"><span></span></div>
-          </li>
-          <li>
-            <div class="collapsible-header center" style="font-size: 40%; color: white;"><b>POSTS</b></div>
-            <div class="collapsible-body child-collapsi center"><span><a href="/Kamublog/admin/posts/add.php" style="color: black;">ADICIONAR POST</a></span></div>
-            <div class="collapsible-body child-collapsi center"><span>EDITAR POST</span></div>
-            <div class="collapsible-body child-collapsi center"><span>REMOVER POST</span></div>
-          </li>
-          <li>
-            <div class="collapsible-header" class="center" style="font-size: 40%; color: white;"><b>ACCOUNTS</b></div>
-            <div class="collapsible-body child-collapsi center"><a href="/Kamublog/admin/register.php" style="color: black;">ADICIONAR USUÁRIO</a></div>
-            <div class="collapsible-body child-collapsi center"><a href="/Kamublog/admin/logout.php" style="color: black;">LOGOUT</a></div>
-          </li>
-        </ul>
-      </div>
-    </ul>
-                                                                                         
-    <a href="#" data-target="slide-out" class="sidenav-trigger"></a>
-  </header>
+  <?php include_once('./header.php'); ?>
 <main>
     <center>
       <p style="color:red;">  <?php if (isset($passwd_err)){echo $passwd_err;} ?> </p>
@@ -236,8 +208,8 @@
     
     <div class="section"></div>
   </main>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <script src="./js/materialize.js"></script>
+  <?php global $success; if($success){echo "<script>document.addEventListener('DOMContentLoaded', function() { M.toast({html: '$mensagem'});});</script>";} ?>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       var elems = document.querySelectorAll('.collapsible');

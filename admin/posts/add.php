@@ -4,9 +4,55 @@
     header("Location: ../login.php");
   }
 
+  $success = false;
+  $mensagem;
+
+  function save_to_db($name, $author, $date, $content, $draft){
+    $conn = new mysqli("127.0.0.1", "root", "", "test");
+    if($conn->connect_error){
+      die("A conexão com o banco de dados falhou: " . $conn->$connect_error);
+    }
+    $sql = "INSERT INTO posts (`post_name`, `post_date`, `post_author`, `post_content`, `post_draft`) VALUES ('$name', '$date', '$author', '$content', '$draft')";
+    /*if ($conn->query($sql) === true){
+      
+    }*/
+    global $success;
+    $success = true;
+    if ($draft === 0) {
+      global $mensagem;
+      $mensagem = "Post publicado com sucesso!";
+    } else {
+      global $mensagem;
+      $mensagem = "Post salvo com sucesso!";
+    }
+  }
+
+  function save(){
+    $name = $_POST['articlename'];
+    $author = $_POST['author'];
+    $date = $_POST['date'];
+    $content = $_POST['articlebody'];
+    $draft = 0;
+    if(isset($_POST['save'])){
+      $draft = 1;
+    } else {
+      $draft = 0;
+    }
+    save_to_db($name, $author, $date, $content, $draft);
+  }
+
   function initialize(){
-      if (isset($_POST["publish"])){
-        echo $_POST["articlebody"];
+    if (isset($_POST)){
+      $required = array("articlename", "date", "author", "articlebody");
+      $err = false;
+      foreach($required as $field){
+        if(empty($_POST[$field])){
+          $err = false;
+        }
+      }
+      if(!$err){
+        save();
+      }
     }
   }
 
@@ -37,12 +83,10 @@
       background-color: white;
       color: black;
     }
-
     .child-sidenav{
       font-size: 200%;
       color: gray;
     }
-
     .child-collapsi{
       font-size: 25%;
       color: black;
@@ -51,39 +95,7 @@
   </style>
 </head>
 <body>
-  <header>
-    <nav class="shiro-header">
-      <div class="nav-wrapper">
-        <a class="brand-logo center" style="color: black;">Adicionar Post</a>
-      </div>
-    </nav>
-    
-    <ul class="sidenav sidenav-fixed aoi-header" id=slide-out>
-      <div class="child-sidenav">
-        <li> <a href="/Kamublog/admin/index.php" class="center" style="font-size: 50%; color: white;"><b><?php echo $_SESSION['username']; ?></b></a> </li>
-        <ul class="collapsible">
-          <li>
-            <div class="collapsible-header center" style="font-size: 40%; color: white;"><b>DASHBOARD</b></div>
-            <div class="collapsible-body child-collapsi"><span></span></div>
-          </li>
-          <li>
-            <div class="collapsible-header center" style="font-size: 40%; color: white;"><b>POSTS</b></div>
-            <div class="collapsible-body child-collapsi center"><span><a href="/Kamublog/admin/posts/add.php" style="color: black;">ADICIONAR POST</a></span></div>
-            <div class="collapsible-body child-collapsi center"><span>EDITAR POST</span></div>
-            <div class="collapsible-body child-collapsi center"><span>REMOVER POST</span></div>
-          </li>
-          <li>
-            <div class="collapsible-header" class="center" style="font-size: 40%; color: white;"><b>ACCOUNTS</b></div>
-            <div class="collapsible-body child-collapsi center"><a href="/Kamublog/admin/register.php" style="color: black;">ADICIONAR USUÁRIO</a></div>
-            <div class="collapsible-body child-collapsi center"><a href="/Kamublog/admin/logout.php" style="color: black;">LOGOUT</a></div>
-          </li>
-        </ul>
-      </div>
-    </ul>
-                                                                                         
-    <a href="#" data-target="slide-out" class="sidenav-trigger">menu</a>
-  </header>
-
+    <?php include_once('../header.php'); ?>
   <main>
     <div class="section"></div>
     <center class="container" style="margin-left: 25%">
@@ -130,10 +142,11 @@
       </form>
     </center>
   </main>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="../js/materialize.js"></script>
   <script src="ckeditor/ckeditor.js"></script>
+  <?php global $success; if($success){echo "<script>document.addEventListener('DOMContentLoaded', function() { M.toast({html: '$mensagem'});});</script>";} ?>
   <script>
+      
     document.addEventListener('DOMContentLoaded', function() {
       var elems = document.querySelectorAll('.collapsible');
       var instances = M.Collapsible.init(elems);
