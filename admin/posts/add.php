@@ -14,17 +14,16 @@
     }
     $sql = "INSERT INTO posts (`post_name`, `post_date`, `post_author`, `post_content`, `post_draft`) VALUES ('$name', '$date', '$author', '$content', '$draft')";
     /*if ($conn->query($sql) === true){
-      
+      global $success;
+      $success = true;
+      if ($draft === 0) {
+        global $mensagem;
+        $mensagem = "Post publicado com sucesso!";
+      } else {
+        global $mensagem;
+        $mensagem = "Post salvo com sucesso!";
+      }
     }*/
-    global $success;
-    $success = true;
-    if ($draft === 0) {
-      global $mensagem;
-      $mensagem = "Post publicado com sucesso!";
-    } else {
-      global $mensagem;
-      $mensagem = "Post salvo com sucesso!";
-    }
   }
 
   function save(){
@@ -100,45 +99,55 @@
     <div class="section"></div>
     <center class="container" style="margin-left: 25%">
       <form class="col s12" action="" method="post">
+        <div class="file-field input-field">
+          <div class="btn">
+            <span>Imagem</span>
+            <input type="file" accept="image/*">
+          </div>
+          <div class="file-path-wrapper">
+            <input class="file-path validate" type="text">
+          </div>
+        </div>
+
+        <div class="row">
           <div class="row">
-            <div class="row">
-              <div class="input-field col s12">
-                <textarea name="articlename" id="articlename" class="materialize-textarea validate"></textarea>
-                <label class="active" for="articlename">Título</label>
-              </div>
+            <div class="input-field col s12">
+              <textarea name="articlename" id="articlename" class="materialize-textarea validate"></textarea>
+              <label class="active" for="articlename">Título</label>
             </div>
           </div>
+        </div>
 
+        <div class="row">
           <div class="row">
-            <div class="row">
-              <div class="input-field col s12">
-                <input name="date" id="date" type="text" class="datepicker validate">
-                <label class="active" for="date">Data de publicação</label>
-              </div>
+            <div class="input-field col s12">
+              <input name="date" id="date" type="text" class="datepicker validate">
+              <label class="active" for="date">Data de publicação</label>
             </div>
           </div>
+        </div>
 
+        <div class="row">
           <div class="row">
-            <div class="row">
-              <div class="input-field col s12">
-                <input value="<?php echo $_SESSION['username']; ?>" name="author" id="author" type="text" class="validate active">
-                <label class="active" for="author">Autor</label>
-              </div>
+            <div class="input-field col s12">
+              <input value="<?php echo $_SESSION['username']; ?>" name="author" id="author" type="text" class="validate active">
+              <label class="active" for="author">Autor</label>
             </div>
           </div>
+        </div>
 
+        <div class="row">
           <div class="row">
-            <div class="row">
-              <div class="input-field col s12">
-                <textarea name="articlebody" id="articlebody" class="materialize-textarea"></textarea>
-              </div>
+            <div class="input-field col s12">
+              <textarea name="articlebody" id="articlebody" class="materialize-textarea"></textarea>
             </div>
           </div>
+        </div>
 
-          <div class='row'>
-            <button type='submit' id="save" name='save' class='btn waves-effect gray left' style="margin-right: 3%">Salvar</button>
-            <button type='submit' id="publish" name='publish' class='btn waves-effect gray left'>Publicar</button>
-          </div>
+        <div class='row'>
+          <button type='submit' id="save" name='save' class='btn waves-effect gray left' style="margin-right: 3%">Salvar</button>
+          <button type='submit' id="publish" name='publish' class='btn waves-effect gray left'>Publicar</button>
+        </div>
       </form>
     </center>
   </main>

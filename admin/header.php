@@ -24,7 +24,7 @@
         <li>
           <div class="collapsible-header center" style="font-size: 40%; color: white;"><b>POSTS</b></div>
           <div class="collapsible-body child-collapsi center"><span><a href="/Kamublog/admin/posts/add.php" style="color: black;">ADICIONAR POST</a></span></div>
-          <div class="collapsible-body child-collapsi center"><span><a href="/Kamublog/admin/posts/edit.php" style="color: black;">EDITAR POST</a></span></div>
+          <div class="collapsible-body child-collapsi center"><span><a href="/Kamublog/admin/posts/posts.php" style="color: black;">EDITAR POST</a></span></div>
           <div class="collapsible-body child-collapsi center"><span>REMOVER POST</span></div>
         </li>
         <li>
