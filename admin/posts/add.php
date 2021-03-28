@@ -4,15 +4,66 @@
     header("Location: ../login.php");
   }
 
+  function check_if_exist($target){
+    if (file_exists($target)){
+      
+    }
+  }
+
+  function save_img(){
+    $target = "../uploads/";
+    $filename = basename($_FILES['ImageFile']['name']);
+    $targ_file = $target . $filename;
+    $check = getimagesize($_FILES['ImageFile']["tmp_name"]);
+    if($check !== false){
+      if(file_exists($targ_file)){
+        
+      } else {
+        if(move_uploaded_file($_FILES["ImageFile"]['tmp_name'], $targ_file)){
+          return true;
+        } else {
+          return false;
+        }
+      }
+    } else {
+      return false;
+    }
+  }
+
   $success = false;
+  $gb_err = false;
   $mensagem;
 
-  function save_to_db($name, $author, $date, $content, $draft){
+  function slugify($post_name){
+		$exclude = array(" ", "?", "/", "~", "=", "´", "`", ".", ",", "^", "[", "]", "{", "}", "(", ")", "ª", "º", "°", "§", "+", "_", "@", "!", "#", "$", "%", "¨", "*", "\\", "|", "'", '"', ":", ";");
+		foreach($exclude as $exc) {
+			$post_name = str_replace($exc, "-", $post_name);
+		}
+		return $post_name;
+	}
+
+  function format_date($date){
+		$arr = (explode(" ", $date));
+		$day = explode(",", $arr[1])[0];
+		$year = $arr[2];
+		$month = 0;
+		$months = array('Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dec');
+		$i = 0;
+		foreach($months as $mon) {
+			$i++;
+			if ($mon === $arr[0]){
+				$month = $i;
+			}
+		}
+    return ($year . "-" . $month . "-" . $day);
+	}
+
+  function save_to_db($name, $author, $date, $content, $draft, $image, $slug){
     $conn = new mysqli("127.0.0.1", "root", "", "test");
     if($conn->connect_error){
       die("A conexão com o banco de dados falhou: " . $conn->$connect_error);
     }
-    $sql = "INSERT INTO posts (`post_name`, `post_date`, `post_author`, `post_content`, `post_draft`) VALUES ('$name', '$date', '$author', '$content', '$draft')";
+    $sql = "INSERT INTO posts (`post_name`, `post_date`, `post_author`, `post_content`, `published`, `post_slug`, `post_image`) VALUES ('$name', '$date', '$author', '$content', '$draft', '$slug', '$image')";
     /*if ($conn->query($sql) === true){
       global $success;
       $success = true;
@@ -24,20 +75,24 @@
         $mensagem = "Post salvo com sucesso!";
       }
     }*/
+
   }
 
   function save(){
     $name = $_POST['articlename'];
     $author = $_POST['author'];
-    $date = $_POST['date'];
+    $date = format_date($_POST['date']);
     $content = $_POST['articlebody'];
+    $slug = slugify($_POST['articlename']);
     $draft = 0;
     if(isset($_POST['save'])){
       $draft = 1;
-    } else {
-      $draft = 0;
     }
-    save_to_db($name, $author, $date, $content, $draft);
+    $image = null;
+    if(save_img()){
+      $image = "../uploads" . basename($_FILES["ImageFile"]['name']);
+    }
+    save_to_db($name, $author, $date, $content, $draft, $image, $slug);
   }
 
   function initialize(){
@@ -46,10 +101,15 @@
       $err = false;
       foreach($required as $field){
         if(empty($_POST[$field])){
-          $err = false;
+          $err = true;
         }
       }
-      if(!$err){
+      if($err){
+        global $gb_err;
+        global $mensagem;
+        $gb_err = true;
+        $mensagem = "Erro! Verifique se os campos estão preenchidos corretamente!";
+      } else {
         save();
       }
     }
@@ -94,15 +154,15 @@
   </style>
 </head>
 <body>
-    <?php include_once('../header.php'); ?>
+    <?php //include_once('../header.php'); ?>
   <main>
     <div class="section"></div>
     <center class="container" style="margin-left: 25%">
-      <form class="col s12" action="" method="post">
+      <form class="col s12" action="" method="post" enctype="multipart/form-data">
         <div class="file-field input-field">
           <div class="btn">
             <span>Imagem</span>
-            <input type="file" accept="image/*">
+            <input type="file" accept="image/*" name="ImageFile" id="ImageFile">
           </div>
           <div class="file-path-wrapper">
             <input class="file-path validate" type="text">
@@ -154,6 +214,7 @@
   <script src="../js/materialize.js"></script>
   <script src="ckeditor/ckeditor.js"></script>
   <?php global $success; if($success){echo "<script>document.addEventListener('DOMContentLoaded', function() { M.toast({html: '$mensagem'});});</script>";} ?>
+  <?php global $gb_err; if($gb_err){echo "<script>document.addEventListener('DOMContentLoaded', function() { M.toast({html: '$mensagem'});});</script>";} ?>
   <script>
       
     document.addEventListener('DOMContentLoaded', function() {
@@ -176,7 +237,7 @@
         setDefaultDate: true,
         today: 'Hoje',
         closeOnSelect: false,
-        format: 'dd-mmm-yyyy',
+        format: 'dd-mm-yyyy',
         selectMonths: true,
         previousMonth: '<',
         nextMonth: '>',
