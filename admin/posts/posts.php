@@ -1,5 +1,8 @@
 <?php
   session_start();
+  if(!(isset($_SESSION['email']))){
+    header("Location: ../login.php");
+  }
 
   try{
     $conn = new mysqli("127.0.0.1","root", "","test");
@@ -10,7 +13,7 @@
     $sql_query = "SELECT COUNT(*) FROM posts";
     $total = $conn->query($sql_query)->fetch_row()[0];
 
-    $limit = 5;
+    $limit = 10;
 
     $pages = ceil($total / $limit);
 
@@ -82,7 +85,7 @@
   <main class="container">
     <div class="main-body">
       <?php
-        function output($name, $content){
+        function output($name, $content, $slug){
           $middle = "";
           if (strlen($content) <= 50){
             $middle = $content;
@@ -92,13 +95,33 @@
             $content = $content."...";
             $middle = $content;
           }
-          echo '<p>', $name, '<span>', $middle,  '</span> <span class="right">Delete</span><span class="right" style="margin-right: 3%">Edit</span></p>';
+          $name = strip_tags(html_entity_decode($name));
+          $middle = strip_tags(html_entity_decode($middle));
+          
+          echo <<< EOT
+            <p>
+              <span style="margin-right: 5%; font-size: 120%">
+                $name
+              </span>
+              <span class="center">
+                $middle
+              </span>
+              <span class="right" style="margin-left:3%;">
+                <button type='submit' id="delete" name='delete' class='btn waves-effect gray'>Delete</button>
+              </span>
+              <span class="right">
+                <a href="./edit.php?slug=$slug">
+                  <button class='btn waves-effect gray'>Edit</button>
+                </a>
+              </span>
+            </p>
+          EOT;
         }
         if (!($stmt === false)){
           if ($stmt->num_rows > 0) {
             
             while ($row = $stmt->fetch_assoc()){
-              output($row['post_name'], $row['post_content']);
+              output($row['post_name'], $row['post_content'], $row['post_slug']);
             }
           } else {
             echo '<p>No results could be displayed.</p>';
@@ -110,7 +133,7 @@
     </div>
     <center>
       <ul class="pagination">
-        <li<?php echo '<div id="paging"><p>', $prevlink, ' Page ', $page, ' of ', $pages, ' pages, displaying ', $start, '-', $end, ' of ', $total, ' results ', $nextlink, ' </p></div>';?></li>
+        <li<?php echo '<div id="paging"><p>', $prevlink, ' Página ', $page, ' de ', $pages, ' páginas, motrando ', $start, '-', $end, ' de ', $total, ' resultados ', $nextlink, ' </p></div>';?></li>
       </ul>
     </center>
   </main>

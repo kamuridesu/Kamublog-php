@@ -4,37 +4,32 @@
     header("Location: ../login.php");
   }
 
-  function check_if_exist($target){
-    if (file_exists($target)){
-      
-    }
-  }
+  // global Bariables
+  $success = false;
+  $gb_err = false;
+  $mensagem;
 
   function save_img(){
     $target = "../uploads/";
     $filename = basename($_FILES['ImageFile']['name']);
+    $ext = explode(".", $filename);
+    $ext = "." . $ext[sizeof($ext) - 1];
+    $filename = explode($ext, $filename)[0] . time() . $ext;
     $targ_file = $target . $filename;
     $check = getimagesize($_FILES['ImageFile']["tmp_name"]);
     if($check !== false){
-      if(file_exists($targ_file)){
-        
-      } else {
         if(move_uploaded_file($_FILES["ImageFile"]['tmp_name'], $targ_file)){
-          return true;
+          return $targ_file;
         } else {
           return false;
         }
-      }
     } else {
       return false;
     }
   }
 
-  $success = false;
-  $gb_err = false;
-  $mensagem;
-
   function slugify($post_name){
+    // kono bullshit here
 		$exclude = array(" ", "?", "/", "~", "=", "´", "`", ".", ",", "^", "[", "]", "{", "}", "(", ")", "ª", "º", "°", "§", "+", "_", "@", "!", "#", "$", "%", "¨", "*", "\\", "|", "'", '"', ":", ";");
 		foreach($exclude as $exc) {
 			$post_name = str_replace($exc, "-", $post_name);
@@ -43,6 +38,7 @@
 	}
 
   function format_date($date){
+    // materiailze donnut like me
 		$arr = (explode(" ", $date));
 		$day = explode(",", $arr[1])[0];
 		$year = $arr[2];
@@ -64,7 +60,8 @@
       die("A conexão com o banco de dados falhou: " . $conn->$connect_error);
     }
     $sql = "INSERT INTO posts (`post_name`, `post_date`, `post_author`, `post_content`, `published`, `post_slug`, `post_image`) VALUES ('$name', '$date', '$author', '$content', '$draft', '$slug', '$image')";
-    /*if ($conn->query($sql) === true){
+    if ($conn->query($sql) === true){
+      // ???????????????????
       global $success;
       $success = true;
       if ($draft === 0) {
@@ -74,7 +71,7 @@
         global $mensagem;
         $mensagem = "Post salvo com sucesso!";
       }
-    }*/
+    }
 
   }
 
@@ -88,9 +85,9 @@
     if(isset($_POST['save'])){
       $draft = 1;
     }
-    $image = null;
-    if(save_img()){
-      $image = "../uploads" . basename($_FILES["ImageFile"]['name']);
+    $image = save_img();
+    if($image === false){
+      $image = null;
     }
     save_to_db($name, $author, $date, $content, $draft, $image, $slug);
   }
@@ -154,7 +151,7 @@
   </style>
 </head>
 <body>
-    <?php //include_once('../header.php'); ?>
+    <?php include_once('../header.php'); ?>
   <main>
     <div class="section"></div>
     <center class="container" style="margin-left: 25%">
