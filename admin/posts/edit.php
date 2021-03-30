@@ -9,13 +9,103 @@
   $gb_err = false;
   $mensagem;
 
+  function format_date($date){
+    // materiailze donnut like me
+		$arr = (explode(" ", $date));
+		$day = explode(",", $arr[1])[0];
+		$year = $arr[2];
+		$month = 0;
+		$months = array('Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dec');
+		$i = 0;
+		foreach($months as $mon) {
+			$i++;
+			if ($mon === $arr[0]){
+				$month = $i;
+			}
+		}
+    return ($year . "-" . $month . "-" . $day);
+	}
+
+  function slugify($post_name){
+    // kono bullshit here
+		$exclude = array(" ", "?", "/", "~", "=", "´", "`", ".", ",", "^", "[", "]", "{", "}", "(", ")", "ª", "º", "°", "§", "+", "_", "@", "!", "#", "$", "%", "¨", "*", "\\", "|", "'", '"', ":", ";");
+		foreach($exclude as $exc) {
+			$post_name = str_replace($exc, "-", $post_name);
+		}
+		return $post_name;
+	}
+
+  function println(){
+    $args = func_get_args();
+    foreach($args as $arg){
+      echo "<p>" . $arg . "</p>";
+    }
+  }
+
+  function save_img(){
+    if(!(empty($_FILES['ImageFile']['name']))){
+      $target = "../uploads/";
+      $filename = basename($_FILES['ImageFile']['name']);
+      $ext = explode(".", $filename);
+      $ext = "." . $ext[sizeof($ext) - 1];
+      $filename = explode($ext, $filename)[0] . time() . $ext;
+      $targ_file = $target . $filename;
+      $check = getimagesize($_FILES['ImageFile']["tmp_name"]);
+      if($check !== false){
+          if(move_uploaded_file($_FILES["ImageFile"]['tmp_name'], $targ_file)){
+            return $targ_file;
+          } else {
+            return false;
+          }
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+    
+  }
+
+
+  function save($draft){
+    $name = $_POST['articlename'];
+    $author = $_POST['author'];
+    $date = format_date($_POST['date']);
+    $content = $_POST['articlebody'];
+    $slug = slugify($_POST['articlename']);
+    $image = save_img();
+    if($image === false){
+      $image = null;
+    }
+
+    println($name);
+    println($author);
+    println($date);
+    println($content);
+    println($slug);
+    println($draft);
+    println($image);
+    
+  }
+
+  function update_post(){
+    $conn = new mysqli("127.0.0.1", "root", "", "test");
+    if($conn->connect_error){
+      die("A conexão com o banco de dados falhou: " . $conn->connect_error);
+    }
+
+    //$sql = "UPDATE posts SET "
+
+    $conn->close();
+  }
+
   function retrieve_data($slug){
     $conn = new mysqli("127.0.0.1","root", "","test");
     if($conn->connect_error){
-      die("A conexão com o banco de dados falhou falhou: " . $conn->connect_error);
+      die("A conexão com o banco de dados falhou : " . $conn->connect_error);
     }
 
-    $sql = "SELECT post_name, post_date, post_author, post_content, published, post_slug, post_image FROM posts";
+    $sql = "SELECT post_id, post_name, post_date, post_author, post_content, published, post_slug, post_image FROM posts";
     $result = $conn->query($sql);
     if ($result->num_rows > 0){
       while ($row = $result->fetch_assoc()){
@@ -46,7 +136,10 @@
 
   $data = initialize();
   $unpacked_date = unpack_date($data['post_date']);
-  print_r($data);
+
+  if($_SERVER["REQUEST_METHOD"] == "POST"){
+    save($data['published']);
+  }
 
 ?>
 
@@ -87,6 +180,7 @@
   <main>
     <div class="section"></div>
     <center class="container" style="margin-left: 25%">
+    <img src="/Kamublog/admin/functions/getImage.php?file=<?php if(isset($data['post_image'])){ echo basename($data['post_image']); } ?>" height="70%" width="70%">
       <form class="col s12" action="" method="post" enctype="multipart/form-data">
         <div class="file-field input-field">
           <div class="btn">
@@ -94,7 +188,7 @@
             <input type="file" accept="image/*" name="ImageFile" id="ImageFile">
           </div>
           <div class="file-path-wrapper">
-            <input class="file-path validate" type="text">
+            <input placeholder="<?php if(isset($data['post_image'])) { echo basename($data['post_image']);} ?>" class="file-path validate" type="text">
           </div>
         </div>
 
@@ -182,6 +276,10 @@
       // materialize probaby hate m
       var elems = document.querySelectorAll('.datepicker');
       var instances = M.Datepicker.init(elems, datetimeopt);
+      var instance = M.Datepicker.getInstance(elems[0]);
+      instance.setDate("<?php if(isset($unpacked_date)){ echo $unpacked_date; }?>");
+      elems[0].value = instance.toString(); // materialze is just broken so we need to put the value of the element as the string of the instance;
+      // of cours this is a bad solution as it breaks the lable but.......
     });
 
     M.updateTextFields();
