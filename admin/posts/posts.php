@@ -31,17 +31,17 @@
 
     $start = $offset + 1;
     $end = min(($offset + $limit), $total);
+    if((int)$start < 0){
+      $start = 0;
+    }
 
     $prevlink = ($page > 1) ? '<a href="?page=1" title="Primeira página">&laquo;</a> <a href="?page=' . ($page - 1) . '" title="Página anterior">&lsaquo;</a>' : '<span class="disabled">&laquo;</span> <span class="disabled">&lsaquo;</span>';
-
     $nextlink = ($page < $pages) ? '<a href="?page=' . ($page + 1) . '" title="Próxima página">&rsaquo;</a> <a href="?page=' . $pages . '" title="Última página">&raquo;</a>' : '<span class="disabled">&rsaquo;</span> <span class="disabled">&raquo;</span>';
-    
     $sql_query = "SELECT * FROM posts ORDER BY post_id LIMIT $limit OFFSET $offset";
     $stmt = $conn->query($sql_query);
     
 
   } catch (Exception $e) {
-    echo '<p>', $e->getMessage(), '</p>';
   }
 
   if(isset($_GET['success'])){
@@ -124,7 +124,7 @@
                 $middle
               </span>
               <span class="right" style="margin-left:3%;">
-                <a href="./delete.php?post_id=$post_id"><button type='button' class='btn waves-effect gray'>Delete</button></a>
+                <a href="./delete.php?post_id=$post_id"><button type='button' class='btn waves-effect red'>Delete</button></a>
               </span>
               <span class="right">
                 <a href="./edit.php?slug=$slug">
@@ -142,14 +142,12 @@
           } else {
             echo '<p>No results could be displayed.</p>';
           }
-        } else {
-          print_r($conn->error_list);
         }
       ?>
     </div>
     <center>
       <ul class="pagination">
-        <li<?php echo '<div id="paging"><p>', $prevlink, ' Página ', $page, ' de ', $pages, ' páginas, motrando ', $start, '-', $end, ' de ', $total, ' resultados ', $nextlink, ' </p></div>';?></li>
+        <li<?php echo '<div id="paging"><p>', $prevlink, ' Página ', $page, ' de ', $pages, ' páginas, mostrando ', $start, '-', $end, ' de ', $total, ' resultados ', $nextlink, ' </p></div>';?></li>
       </ul>
     </center>
   </main>
