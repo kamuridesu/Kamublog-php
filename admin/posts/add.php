@@ -4,28 +4,35 @@
     header("Location: ../login.php");
   }
 
+  setlocale(LC_ALL, 'pt_BR', 'pt_BR.utf-8', 'pt_BR.utf-8', 'portuguese');
+  date_default_timezone_set('America/Sao_Paulo');
+
   // global Bariables
   $success = false;
   $gb_err = false;
   $mensagem;
 
   function save_img(){
-    $target = "../uploads/";
-    $filename = basename($_FILES['ImageFile']['name']);
-    $ext = explode(".", $filename);
-    $ext = "." . $ext[sizeof($ext) - 1];
-    $filename = explode($ext, $filename)[0] . time() . $ext;
-    $targ_file = $target . $filename;
-    $check = getimagesize($_FILES['ImageFile']["tmp_name"]);
-    if($check !== false){
-        if(move_uploaded_file($_FILES["ImageFile"]['tmp_name'], $targ_file)){
-          return $targ_file;
-        } else {
-          return false;
-        }
-    } else {
-      return false;
+    if(!(empty($_FILES['ImageFile']['name']))){
+      print_r($_FILES);
+      $target = "../uploads/";
+      $filename = basename($_FILES['ImageFile']['name']);
+      $ext = explode(".", $filename);
+      $ext = "." . $ext[sizeof($ext) - 1];
+      $filename = explode($ext, $filename)[0] . time() . $ext;
+      $targ_file = $target . $filename;
+      $check = getimagesize($_FILES['ImageFile']["tmp_name"]);
+      if($check !== false){
+          if(move_uploaded_file($_FILES["ImageFile"]['tmp_name'], $targ_file)){
+            return $targ_file;
+          } else {
+            return false;
+          }
+      } else {
+        return false;
+      }
     }
+    
   }
 
   function slugify($post_name){
@@ -34,7 +41,7 @@
 		foreach($exclude as $exc) {
 			$post_name = str_replace($exc, "-", $post_name);
 		}
-		return $post_name;
+		return $post_name . "-" . time();
 	}
 
   function format_date($date){
@@ -47,7 +54,7 @@
 		$i = 0;
 		foreach($months as $mon) {
 			$i++;
-			if ($mon === $arr[0]){
+			if (strtolower($mon) === strtolower($arr[0])){
 				$month = $i;
 			}
 		}
@@ -249,6 +256,9 @@
     document.addEventListener('DOMContentLoaded', function() {
       var elems = document.querySelectorAll('.datepicker');
       var instances = M.Datepicker.init(elems, datetimeopt);
+      var instance = M.Datepicker.getInstance(elems[0]);
+      instance.setDate("<?php echo (strftime("%b %d, %Y", strtotime('today'))); ?>");
+      elems[0].value = "<?php echo (strftime("%b %d, %Y", strtotime('today'))); ?>";
     });
 
     M.updateTextFields();

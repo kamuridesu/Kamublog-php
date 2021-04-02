@@ -1,15 +1,14 @@
 <?php
   ob_start();
   $passwd_err;
-  function set_session($arr){
-    session_start();
-    $_SESSION['username'] = $arr[1];
-    $_SESSION['email'] = $arr[2];
+  session_start();
+  if(isset($_SESSION['email'])){
+    header("Location: ./index.php");
   }
 
   function login(){
       if (isset($_POST)){
-        if(!isset($_SESSION)){
+        if(!(isset($_SESSION['email']))){
           $required = array("email", "password");
           $err = false;
           foreach($required as $field){
@@ -53,7 +52,9 @@
     }
   }
 
-  function ok() {
+  function ok($arr) {
+    $_SESSION['username'] = $arr[1];
+    $_SESSION['email'] = $arr[2];
     header("Location: index.php");
   }
 
@@ -71,9 +72,8 @@
         $uid = $udata['id'];
         $uname = $udata['username'];
         $umail = $udata['email'];
-        set_session(array($uid, $uname, $umail));
         $passwd_err = "";
-        ok();
+        ok(array($uid, $uname, $umail));
       }
     }
   }

@@ -4,6 +4,9 @@
     header("Location: ../login.php");
   }
 
+  $success = false;
+  $mensagem;
+
   try{
     $conn = new mysqli("127.0.0.1","root", "","test");
     if($conn->connect_error){
@@ -39,6 +42,20 @@
 
   } catch (Exception $e) {
     echo '<p>', $e->getMessage(), '</p>';
+  }
+
+  if(isset($_GET['success'])){
+    if($_GET['success'] === "true"){
+      global $success;
+      $success = true;
+      global $mensagem;
+      $mensagem = "Post deletado com sucesso!";
+    } else if($_GET['success'] === "false"){
+      global $success;
+      $success = true;
+      global $mensagem;
+      $mensagem = "Erro ao deletar o post!";
+    }
   }
   
 ?>
@@ -85,7 +102,7 @@
   <main class="container">
     <div class="main-body">
       <?php
-        function output($name, $content, $slug){
+        function output($name, $content, $slug, $post_id){
           $middle = "";
           if (strlen($content) <= 50){
             $middle = $content;
@@ -107,7 +124,7 @@
                 $middle
               </span>
               <span class="right" style="margin-left:3%;">
-                <button type='submit' id="delete" name='delete' class='btn waves-effect gray'>Delete</button>
+                <a href="./delete.php?post_id=$post_id"><button type='button' class='btn waves-effect gray'>Delete</button></a>
               </span>
               <span class="right">
                 <a href="./edit.php?slug=$slug">
@@ -119,9 +136,8 @@
         }
         if (!($stmt === false)){
           if ($stmt->num_rows > 0) {
-            
             while ($row = $stmt->fetch_assoc()){
-              output($row['post_name'], $row['post_content'], $row['post_slug']);
+              output($row['post_name'], $row['post_content'], $row['post_slug'], $row['post_id']);
             }
           } else {
             echo '<p>No results could be displayed.</p>';
@@ -139,6 +155,7 @@
   </main>
 
   <script src="../js/materialize.js"></script>
+  <?php global $success; if($success){echo "<script>document.addEventListener('DOMContentLoaded', function() { M.toast({html: '$mensagem'});});</script>";} ?>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       var elems = document.querySelectorAll('.collapsible');

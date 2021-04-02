@@ -32,15 +32,8 @@
 		foreach($exclude as $exc) {
 			$post_name = str_replace($exc, "-", $post_name);
 		}
-		return $post_name;
+		return $post_name . "-" . time();
 	}
-
-  function println(){
-    $args = func_get_args();
-    foreach($args as $arg){
-      echo "<p>" . $arg . "</p>";
-    }
-  }
 
   function save_img(){
     if(!(empty($_FILES['ImageFile']['name']))){
@@ -67,35 +60,33 @@
   }
 
 
-  function save($draft){
+  function save($draft, $id, $img, $slug){
     $name = $_POST['articlename'];
     $author = $_POST['author'];
     $date = format_date($_POST['date']);
     $content = $_POST['articlebody'];
-    $slug = slugify($_POST['articlename']);
+    if(isset($_POST['publish'])){
+      $draft = 0;
+    }
     $image = save_img();
     if($image === false){
-      $image = null;
+      $image = $img;
     }
 
-    println($name);
-    println($author);
-    println($date);
-    println($content);
-    println($slug);
-    println($draft);
-    println($image);
+    update_post($name, $author, $date, $content, $slug, $image, $draft, $id);
     
   }
 
-  function update_post(){
+  function update_post($name, $author, $date, $content, $slug, $image, $draft, $id){
     $conn = new mysqli("127.0.0.1", "root", "", "test");
     if($conn->connect_error){
       die("A conexão com o banco de dados falhou: " . $conn->connect_error);
     }
 
-    //$sql = "UPDATE posts SET "
-
+    $sql = "UPDATE posts SET post_name = '$name', post_date = '$date', post_author = '$author', post_content = '$content', published = '$draft', post_slug = '$slug', post_image = '$image' WHERE post_id = '$id'";
+    if($conn->query($sql) === true){
+      header("Location: ./edit.php?slug=$slug&success=true");
+    }
     $conn->close();
   }
 
@@ -113,11 +104,24 @@
           return $row;
         }
       }
+      header("Location: ../index.php");
     }
     $conn->close();
   }
   
   function initialize() {
+    if(isset($_GET['success'])){
+      if($_GET['success'] === "true"){
+        global $success;
+        $success = true;
+        global $mensagem;
+        if(isset($_POST['publish'])){
+          $mensagem = "Post publicado com sucesso!";
+        } else {
+          $mensagem = "Post salvo com sucesso!";
+        }
+      }
+    }
     $data = retrieve_data($_GET['slug']);
     return $data;
   }
@@ -127,18 +131,24 @@
     $date_string = explode(" ", $date_string)[0];
     $months = array('Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dec');
     $unpkd = explode("-", $date_string);
-    $month = $months[(int)$unpkd[1] - 1];
-    $day = $unpkd[2];
-    $year = $unpkd[0];
-    $full_date = $month . " ". $day . ", " . $year;
-    return $full_date;
+    if(isset($months[(int)$unpkd[1] - 1])){
+      $month = $months[(int)$unpkd[1] - 1];
+      $day = $unpkd[2];
+      $year = $unpkd[0];
+      $full_date = $month . " ". $day . ", " . $year;
+      return $full_date;
+    } else {
+      return $full_date;
+    }
+    
+    
   }
 
   $data = initialize();
   $unpacked_date = unpack_date($data['post_date']);
 
   if($_SERVER["REQUEST_METHOD"] == "POST"){
-    save($data['published']);
+    save($data['published'], $data["post_id"], $data['post_image'], $data['post_slug']);
   }
 
 ?>
@@ -152,7 +162,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <link rel="stylesheet" type="text/css" href="../css/materialize.css">
   
-  <title>Editar Post</title>
+  <title><?php echo $data['post_name'] ?> - Editor</title>
 
   <style>
     .aoi-header{
@@ -176,11 +186,15 @@
   </style>
 </head>
 <body>
-    <?php //include_once('../header.php'); ?>
+    <?php include_once('../header.php'); ?>
   <main>
     <div class="section"></div>
     <center class="container" style="margin-left: 25%">
-    <img src="/Kamublog/admin/functions/getImage.php?file=<?php if(isset($data['post_image'])){ echo basename($data['post_image']); } ?>" height="70%" width="70%">
+    <?php if(!($data['post_image'] === "")){
+      $img = $data['post_image'];
+      echo '<img src="/Kamublog/admin/functions/getImage.php?file=' . $img . '" height="70%" width="70%">';
+      }
+    ?>
       <form class="col s12" action="" method="post" enctype="multipart/form-data">
         <div class="file-field input-field">
           <div class="btn">
@@ -229,7 +243,13 @@
 
         <div class='row'>
           <button type='submit' id="save" name='save' class='btn waves-effect gray left' style="margin-right: 3%">Salvar</button>
-          <button type='submit' id="publish" name='publish' class='btn waves-effect gray left'>Publicar</button>
+          <?php
+            if($data['published'] === "1"){
+              echo '<button type="submit" id="publish" name="publish" class="btn waves-effect gray left cyan">Publicar</button>';
+            }
+          ?>
+          <?php echo '<a href="./delete.php?post_id=' . $data['post_id'] . '"><button type="button" class="btn waves-effect gray right red">Deletar</button></a>'?>
+          
         </div>
       </form>
     </center>
@@ -278,7 +298,7 @@
       var instances = M.Datepicker.init(elems, datetimeopt);
       var instance = M.Datepicker.getInstance(elems[0]);
       instance.setDate("<?php if(isset($unpacked_date)){ echo $unpacked_date; }?>");
-      elems[0].value = instance.toString(); // materialze is just broken so we need to put the value of the element as the string of the instance;
+      elems[0].value = "<?php if(isset($unpacked_date)){ echo $unpacked_date; }?>"; // materialze is just broken so we need to put the value of the element as the string of the instance;
       // of cours this is a bad solution as it breaks the lable but.......
     });
 
