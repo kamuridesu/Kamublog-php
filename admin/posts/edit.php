@@ -37,7 +37,7 @@
 
   function save_img(){
     if(!(empty($_FILES['ImageFile']['name']))){
-      $target = "../uploads/";
+      $target = "/Kamublog/uploads/";
       $filename = basename($_FILES['ImageFile']['name']);
       $ext = explode(".", $filename);
       $ext = "." . $ext[sizeof($ext) - 1];
@@ -96,17 +96,14 @@
       die("A conexão com o banco de dados falhou : " . $conn->connect_error);
     }
 
-    $sql = "SELECT post_id, post_name, post_date, post_author, post_content, published, post_slug, post_image FROM posts";
+    $sql = "SELECT post_id, post_name, post_date, post_author, post_content, published, post_slug, post_image FROM posts WHERE post_slug = '$slug'";
     $result = $conn->query($sql);
     if ($result->num_rows > 0){
-      while ($row = $result->fetch_assoc()){
-        if($row['post_slug'] === $slug){
-          return $row;
-        }
-      }
-      header("Location: ../index.php");
+      $row = $result->fetch_assoc();
+      $conn->close();
+      return $row;
     }
-    $conn->close();
+    header("Location: ./posts.php");
   }
   
   function initialize() {

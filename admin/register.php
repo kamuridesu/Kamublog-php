@@ -1,93 +1,72 @@
 <?php
-  ob_start();
-  $passwd_err;
-  $field_err;
-  $user_err;
-
-  $mensagem;
-
   session_start();
   if (!(isset($_SESSION['email']))){
     header("Location: login.php");
   }
+  class Register{
+    public $reg_error;
+    public $usr_post_data;
 
-  function register_user(){
-    if (isset($_POST)){
+    public function check_usr_input(){
       $required = array("username", "email", "password", "password2");
       $err = false;
       foreach($required as $field){
-        if (empty($_POST[$field])){
+        if(empty($_POST[$field])){
           $err = true;
         }
       }
-      if ($err){
-        return -1;
-      } else{
-        $uname = $_POST['username'];
-        $uemail = $_POST['email'];
-        $upasswd = $_POST['password'];
-        $upasswd2 = $_POST['password2'];
-        if ($upasswd === $upasswd2){
-          return array($uname, $uemail, $upasswd);  
-        } else {
-          global $passwd_err;
-          $passwd_err = "Erro! Verifique se as senhas são iguais";
-          return -2;
+      if($err){
+        $this->reg_error = "Erro! Verifique se todos os campos estão preenchidos!";
+        return false;
+      }
+      if($_POST['password'] !== $_POST['password2']){
+        $this->reg_error = "Erro! Verifique se as senhas são iguais!";
+        return false;
+      }
+      $this->usr_post_data = array($_POST['username'], $_POST["email"], $_POST["password"]);
+      return true;
+    }
+
+    function save_on_db(){
+      $conn = new mysqli("127.0.0.1", "root", "", "test");
+      if($conn->connect_error){
+        die("Erro ao conectar com o banco de dados: " . $conn->connect_error);
+      }
+      $uemail = $this->usr_post_data[1];
+      $uname = $this->usr_post_data[0];
+      $sql = "SELECT id, email, username, passwd FROM users WHERE email = '$uemail'";
+      $result = $conn->query($sql);
+      if($result->num_rows > 0){
+        $this->reg_error = "Erro! Esse email já está em uso!";
+        return false;
+      }
+      $upasswd = password_hash($this->usr_post_data[2], PASSWORD_BCRYPT);
+      $sql = "INSERT INTO users (`email`, `username`, `passwd`) VALUES ('$uemail', '$uname', '$upasswd')";
+      if($conn->query($sql) === true){
+        $conn->close();
+        header("Location: ./index.php?user=success");
+      } else {
+        $conn->close();
+        $this->reg_error = "Algum erro ocorreu";
+        return false;
+      }
+    }
+
+    function register(){
+      if($this->check_usr_input()){
+        if(!($this->save_on_db())){
+          return false;
         }
-        
+        return true;
       }
     }
   }
 
-  function saveToDB($uname, $uemail, $upasswd){
-    $conn = new mysqli("127.0.0.1","root", "","test");
-    if($conn->connect_error){
-      die("A conexão com o banco de dados falhou falhou: " . $conn->connect_error);
-    }
-    $upasswd = password_hash($upasswd, PASSWORD_BCRYPT);
-
-    $sql = "SELECT id, email, username, passwd FROM users";
-    $result = $conn->query($sql);
-    if ($result->num_rows > 0){
-      while ($row = $result->fetch_assoc()){
-        $dbemail = $row['email'];
-        $dbname = $row['username'];
-        if ($dbname === $uname && $dbemail === $uemail){
-          global $user_err;
-          $user_err = "Erro! Esse usuário já existe!";
-          $mensagem = "Este usuário já existe!";
-          return -2;
-        }
-      }
-    }
-    $sql = "INSERT INTO users (`email`, `username`, `passwd`) VALUES ('$uemail', '$uname', '$upasswd')";
-    if ($conn->query($sql) === true){
-      echo "Usuário salvo com sucesso!";
-    } else {
-      global $passwd_err;
-      $passwd_err =  "Um erro ocorreu: " . $sql . "<p>" . $conn->error . "</p>";
-    }
-    $conn->close();
-    return 0;
-  }
-
-  function initialize(){
-    $res = register_user();
-    if ($res === -1){
-      global $field_err;
-      $field_err = "Erro! Verifique se todos os campos estão preenchidos!";
-    } else if (!($res === -2)){
-      $uname = $res[0];
-      $uemail = $res[1];
-      $upasswd = $res[2];
-      $success = saveToDB($uname, $uemail, $upasswd);
-      if ($success === 0){
-        header("Location: index.php");
-      }
-    }
-  }
+  $reg_usr = new Register();
   if($_SERVER["REQUEST_METHOD"] == "POST"){
-    initialize();
+    if($reg_usr->register()){
+      $reg_usr->reg_error = "Usuário adicionado com sucesso";
+    }
   }
   
 ?>
@@ -100,31 +79,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel de Administração</title>
   <style>
-    body {
-      display: flex;
-      min-height: 100vh;
-      flex-direction: column;
-    }
-
-    main {
-      flex: 1 0 auto;
-    }
-
-
-    .input-field input[type=date]:focus + label,
-    .input-field input[type=text]:focus + label,
-    .input-field input[type=email]:focus + label,
-    .input-field input[type=password]:focus + label {
-      color: #e91e63;
-    }
-
-    .input-field input[type=date]:focus,
-    .input-field input[type=text]:focus,
-    .input-field input[type=email]:focus,
-    .input-field input[type=password]:focus {
-      border-bottom: 2px solid #e91e63;
-      box-shadow: none;
-    }
 
     ::placeholder {
       color: blue;
@@ -157,12 +111,8 @@
   <?php include_once('./header.php'); ?>
 <main>
     <center>
-      <p style="color:red;">  <?php if (isset($passwd_err)){echo $passwd_err;} ?> </p>
-      <p style="color:red;">  <?php if (isset($field_err)){echo $field_err;} ?> </p>
-      <p style="color:red;">  <?php if (isset($user_err)){echo $user_err;} ?> </p>
-
       <div class="container">
-        <div class="z-depth-1 grey lighten-4 row" style="display: inline-block; padding: 32px 48px 0px 48px; border: 1px solid #EEE;">
+        <div class="row" style="margin-left: 20%">
 
           <form class="col s12" action="" method="post">
             <div class='row'>
@@ -209,7 +159,7 @@
     <div class="section"></div>
   </main>
   <script src="./js/materialize.js"></script>
-  <?php global $success; if($success){echo "<script>document.addEventListener('DOMContentLoaded', function() { M.toast({html: '$mensagem'});});</script>";} ?>
+  <?php if(isset($reg_usr->reg_error)){echo "<script>document.addEventListener('DOMContentLoaded', function() { M.toast({html: '$reg_usr->reg_error'});});</script>";} ?>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       var elems = document.querySelectorAll('.collapsible');

@@ -1,84 +1,58 @@
 <?php
-  ob_start();
-  $passwd_err;
   session_start();
   if(isset($_SESSION['email'])){
     header("Location: ./index.php");
   }
-
-  function login(){
-      if (isset($_POST)){
-        if(!(isset($_SESSION['email']))){
-          $required = array("email", "password");
-          $err = false;
-          foreach($required as $field){
-            if (empty($_POST[$field])){
-              $err = true;
-            }
-          }
-          if ($err){
-            global $passwd_err;
-            $passwd_err = "Erro! Verifique a senha e tente novamente!";
-            return -1;
-          } else {
-            return array($_POST['email'], $_POST['password']);
-        }
-    	} 
-    }
-  }
-
-  function retrieve_data($arr){
-    if (isset($arr)){
-      $conn = new mysqli('127.0.0.1', 'root', '', 'test');
-      if($conn->connect_error){
-        die("Ocorreu um erro de conexão: " . $conn->connect_error);
-      }
-      $sql = "SELECT id, email, username, passwd FROM users";
-      $result = $conn->query($sql);
-      if ($result->num_rows > 0){
-        while ($row = $result->fetch_assoc()){
-          $dbemail = $row['email'];
-          $dbpasswd = $row['passwd'];
-          if ($dbemail === $arr[0] && password_verify($arr[1], $dbpasswd)){
-            return $row;
-          }
-        }
-        return -1;
+  class Login{
+    public $login_error;
+    public $passwd;
+    public $email;
+    public $usr_data;
+    public function check_usr_inpt(){
+      if(isset($_POST['email']) && isset($_POST['password'])){
+        $this->passwd = $_POST['password'];
+        $this->email = $_POST['email'];
+        return true;
       } else {
-        global $passwd_err;
-        $passwd_err = "Erro! Verifique se o usuário existe!";
+        $this->login_error = "Erro! Verifique todos os campos estão preenchidos!";
+        return false;
+      }
+    }
+
+    public function check_db(){
+      $conn = new mysqli("127.0.0.1", "root", "", "test");
+      if($conn->connect_error){
+        die("Ocorreu um erro ao conectar com o banco de dados! " . $conn->connect_error);
+      }
+      $sql = "SELECT id, email, username, passwd FROM users WHERE email = '$this->email'";
+      $result = $conn->query($sql);
+      if($result->num_rows > 0){
+        $row = $result->fetch_assoc();
+        if(password_verify($this->passwd, $row['passwd'])){
+          $this->usr_data = $row;
+          $conn->close();
+          return true;
+        }
       }
       $conn->close();
+      $this->login_error = "Erro! Verifique se email ou senha estão certos!";
+      return false;
     }
-  }
 
-  function ok($arr) {
-    $_SESSION['username'] = $arr[1];
-    $_SESSION['email'] = $arr[2];
-    header("Location: index.php");
-  }
-
-  function initialize(){
-    $res = login();
-    if (!($res === -1)){
-      $udata = retrieve_data($res);
-      if ($udata === -1){
-        global $passwd_err;
-        $passwd_err = "Erro! Verifique a senha e o email e tente novamente!";;
-      } else if(is_null($udata)) {
-        global $passwd_err;
-        $passwd_err = "Erro! Verifique se os dados estão corretos!";
-      } else {
-        $uid = $udata['id'];
-        $uname = $udata['username'];
-        $umail = $udata['email'];
-        $passwd_err = "";
-        ok(array($uid, $uname, $umail));
+    public function login(){
+      if($this->check_usr_inpt()){
+        if($this->check_db()){
+          $_SESSION['id'] = $this->usr_data['id'];
+          $_SESSION['email'] = $this->usr_data['email'];
+          $_SESSION['username'] = $this->usr_data['username'];
+          header("Location: ./index.php");
+        }
       }
     }
   }
+  $login_strt = new Login();
   if($_SERVER["REQUEST_METHOD"] == "POST"){
-    initialize();
+    $login_strt->login();
   }
 ?>
 
@@ -132,7 +106,7 @@
       <div class="section"></div>
       <h5 class="gray-text">Painel de Administração - LOGIN</h5>
 
-      <p style="color:red;">  <?php if (isset($passwd_err)){echo $passwd_err;} ?> </p>
+      <p style="color:red;">  <?php if(isset($login_strt->login_error)) { echo $login_strt->login_error; } ?> </p>
 
       <div class="container">
         <div class="z-depth-1 grey lighten-4 row" style="display: inline-block; padding: 32px 48px 0px 48px; border: 1px solid #EEE;">

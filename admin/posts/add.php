@@ -15,7 +15,7 @@
   function save_img(){
     if(!(empty($_FILES['ImageFile']['name']))){
       print_r($_FILES);
-      $target = "../uploads/";
+      $target = "/Kamublog/uploads/";
       $filename = basename($_FILES['ImageFile']['name']);
       $ext = explode(".", $filename);
       $ext = "." . $ext[sizeof($ext) - 1];
