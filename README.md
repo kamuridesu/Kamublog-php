@@ -29,3 +29,10 @@ CREATE TABLE `users` (
   PRIMARY KEY(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 ```
+
+For the .htaccess file, this is working:
+```RewriteEngine on
+RewriteBase /Kamublog
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^post/([^/]+) functions/routing.php [NC]```
