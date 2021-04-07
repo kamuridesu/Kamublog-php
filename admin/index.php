@@ -13,7 +13,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <link rel="stylesheet" type="text/css" href="./css/materialize.css">
+  <link rel="stylesheet" type="text/css" href="../css/materialize.css">
   
   <title>Painel de Administração</title>
 
@@ -43,7 +43,7 @@
 <body>
   <?php include_once('./header.php'); ?>
 
-  <script src="./js/materialize.js"></script>
+  <script src="../js/materialize.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       var elems = document.querySelectorAll('.collapsible');

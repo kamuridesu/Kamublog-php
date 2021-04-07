@@ -105,7 +105,7 @@
       color: black;
     }
   </style>
-  <link rel="stylesheet" type="text/css" href="./css/materialize.css">
+  <link rel="stylesheet" type="text/css" href="../css/materialize.css">
 </head>
 <body>
   <?php include_once('./header.php'); ?>
@@ -158,7 +158,7 @@
     
     <div class="section"></div>
   </main>
-  <script src="./js/materialize.js"></script>
+  <script src="../js/materialize.js"></script>
   <?php if(isset($reg_usr->reg_error)){echo "<script>document.addEventListener('DOMContentLoaded', function() { M.toast({html: '$reg_usr->reg_error'});});</script>";} ?>
   <script>
     document.addEventListener('DOMContentLoaded', function() {

@@ -79,7 +79,6 @@
         $mensagem = "Post salvo com sucesso!";
       }
     }
-
   }
 
   function save(){

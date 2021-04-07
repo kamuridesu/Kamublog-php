@@ -98,7 +98,7 @@
       opacity: 1;
     }
   </style>
-  <link rel="stylesheet" type="text/css" href="./css/materialize.css">
+  <link rel="stylesheet" type="text/css" href="../css/materialize.css">
 </head>
 <body>
 <main>
@@ -146,6 +146,6 @@
     <div class="section"></div>
     <div class="section"></div>
   </main>
-  <script type="text/javascript" src="./js/materialize.js">
+  <script type="text/javascript" src="../js/materialize.js">
 </body>
 </html>

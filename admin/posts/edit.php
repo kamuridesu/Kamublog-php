@@ -37,7 +37,7 @@
 
   function save_img(){
     if(!(empty($_FILES['ImageFile']['name']))){
-      $target = "/Kamublog/uploads/";
+      $target = "../uploads/";
       $filename = basename($_FILES['ImageFile']['name']);
       $ext = explode(".", $filename);
       $ext = "." . $ext[sizeof($ext) - 1];
@@ -56,9 +56,7 @@
     } else {
       return false;
     }
-    
   }
-
 
   function save($draft, $id, $img, $slug){
     $name = $_POST['articlename'];
@@ -72,9 +70,7 @@
     if($image === false){
       $image = $img;
     }
-
     update_post($name, $author, $date, $content, $slug, $image, $draft, $id);
-    
   }
 
   function update_post($name, $author, $date, $content, $slug, $image, $draft, $id){
@@ -251,7 +247,7 @@
       </form>
     </center>
   </main>
-  <script src="../js/materialize.js"></script>
+  <script src="/Kamublog/js/materialize.js"></script>
   <script src="ckeditor/ckeditor.js"></script>
   <?php global $success; if($success){echo "<script>document.addEventListener('DOMContentLoaded', function() { M.toast({html: '$mensagem'});});</script>";} ?>
   <?php global $gb_err; if($gb_err){echo "<script>document.addEventListener('DOMContentLoaded', function() { M.toast({html: '$mensagem'});});</script>";} ?>
